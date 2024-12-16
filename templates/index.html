@@ -3,158 +3,108 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Churn Prediction</title>
+    <title>Customer Churn Prediction</title>
     <style>
-        body, html {
-            margin: 0;
-            padding: 0;
+        body {
             font-family: Arial, sans-serif;
-            background-color: #f4f7fc;
-            color: #333;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            margin: 20px;
+            padding: 0;
+            background-color: #f4f4f9;
         }
-
-        /* Main container */
         .container {
-            background-color: #ffffff;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            width: 80%;
-            max-width: 600px;
+            max-width: 500px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
-
-        /* Header */
         h1 {
             text-align: center;
-            color: #4CAF50;
-            font-size: 28px;
         }
-
-        /* Form elements */
+        form {
+            display: flex;
+            flex-direction: column;
+        }
         label {
-            font-size: 16px;
-            margin-bottom: 8px;
-            display: block;
-            color: #555;
+            margin: 10px 0 5px;
         }
-
-        select, input[type="number"] {
-            width: 100%;
+        input, select, button {
             padding: 10px;
-            margin: 10px 0 20px 0;
-            border-radius: 5px;
+            margin-bottom: 15px;
             border: 1px solid #ccc;
-            box-sizing: border-box;
+            border-radius: 4px;
         }
-
-        select:focus, input[type="number"]:focus {
-            border-color: #4CAF50;
-            outline: none;
-        }
-
-        input[type="submit"] {
-            background-color: #4CAF50;
-            color: white;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
+        button {
+            background-color: #5cb85c;
+            color: #fff;
             cursor: pointer;
-            width: 100%;
-            transition: background-color 0.3s ease;
         }
-
-        input[type="submit"]:hover {
-            background-color: #45a049;
+        button:hover {
+            background-color: #4cae4c;
         }
-
-        /* Prediction result */
-        h2 {
+        .prediction {
             text-align: center;
+            font-size: 1.2em;
+            margin-top: 15px;
             color: #333;
-            margin-top: 20px;
-        }
-
-        .result {
-            font-size: 20px;
-            text-align: center;
-            font-weight: bold;
-            color: #4CAF50;
-        }
-
-        /* Media Queries for responsiveness */
-        @media (max-width: 600px) {
-            .container {
-                padding: 15px;
-            }
-
-            h1 {
-                font-size: 24px;
-            }
-
-            input[type="submit"] {
-                font-size: 14px;
-            }
         }
     </style>
 </head>
 <body>
-    <h1>Customer Churn Prediction</h1>
-    <form action="/predict" method="POST">
-        <label for="contract">Contract Type:</label>
-        <select name="contract" id="contract">
-            <option value="Month-to-month">Month-to-month</option>
-            <option value="One year">One year</option>
-            <option value="Two year">Two year</option>
-        </select><br><br>
+    <div class="container">
+        <h1>Churn Prediction</h1>
+        <form action="/predict" method="post">
+            <label for="Contract">Contract:</label>
+            <select name="Contract" id="Contract">
+                <option value="Month-to-month">Month-to-month</option>
+                <option value="One year">One year</option>
+                <option value="Two year">Two year</option>
+            </select>
 
-        <label for="tenure">Tenure (Months):</label>
-        <input type="number" id="tenure" name="tenure" required><br><br>
+            <label for="tenure">Tenure (in months):</label>
+            <input type="number" name="tenure" id="tenure" required>
 
-        <label for="internet_service">Internet Service:</label>
-        <select name="internet_service" id="internet_service">
-            <option value="DSL">DSL</option>
-            <option value="Fiber optic">Fiber optic</option>
-            <option value="No">No</option>
-        </select><br><br>
+            <label for="InternetService">Internet Service:</label>
+            <select name="InternetService" id="InternetService">
+                <option value="DSL">DSL</option>
+                <option value="Fiber optic">Fiber optic</option>
+                <option value="No">No</option>
+            </select>
 
-        <label for="total_charges">Total Charges:</label>
-        <input type="number" id="total_charges" name="total_charges" required><br><br>
+            <label for="TotalCharges">Total Charges:</label>
+            <input type="number" name="TotalCharges" id="TotalCharges" required step="0.01">
 
-        <label for="monthly_charges">Monthly Charges:</label>
-        <input type="number" id="monthly_charges" name="monthly_charges" required><br><br>
+            <label for="MonthlyCharges">Monthly Charges:</label>
+            <input type="number" name="MonthlyCharges" id="MonthlyCharges" required step="0.01">
 
-        <label for="online_security">Online Security:</label>
-        <select name="online_security" id="online_security">
-            <option value="Yes">Yes</option>
-            <option value="No">No</option>
-            <option value="No internet service">No internet service</option>
-        </select><br><br>
+            <label for="OnlineSecurity">Online Security:</label>
+            <select name="OnlineSecurity" id="OnlineSecurity">
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+                <option value="No internet service">No internet service</option>
+            </select>
 
-        <label for="tech_support">Tech Support:</label>
-        <select name="tech_support" id="tech_support">
-            <option value="Yes">Yes</option>
-            <option value="No">No</option>
-            <option value="No internet service">No internet service</option>
-        </select><br><br>
+            <label for="TechSupport">Tech Support:</label>
+            <select name="TechSupport" id="TechSupport">
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+                <option value="No internet service">No internet service</option>
+            </select>
 
-        <label for="payment_method">Payment Method:</label>
-        <select name="payment_method" id="payment_method">
-            <option value="Electronic check">Electronic check</option>
-            <option value="Mailed check">Mailed check</option>
-            <option value="Bank transfer (automatic)">Bank transfer (automatic)</option>
-            <option value="Credit card (automatic)">Credit card (automatic)</option>
-        </select><br><br>
+            <label for="PaymentMethod">Payment Method:</label>
+            <select name="PaymentMethod" id="PaymentMethod">
+                <option value="Electronic check">Electronic check</option>
+                <option value="Mailed check">Mailed check</option>
+                <option value="Bank transfer (automatic)">Bank transfer (automatic)</option>
+                <option value="Credit card (automatic)">Credit card (automatic)</option>
+            </select>
 
-        <input type="submit" value="Predict">
-    </form>
-
-    {% if prediction is not none %}
-    <h2>Prediction: {{ prediction }}</h2>
-    {% endif %}
+            <button type="submit">Predict</button>
+        </form>
+        {% if prediction %}
+        <div class="prediction">Prediction: {{ prediction }}</div>
+        {% endif %}
+    </div>
 </body>
 </html>

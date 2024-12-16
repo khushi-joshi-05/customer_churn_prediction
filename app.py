@@ -1,82 +1,70 @@
 import pickle
+import pandas as pd
 import numpy as np
 from flask import Flask, request, render_template
 
-# Load the trained XGBoost model
-model = pickle.load(open('xgb_model.pkl', 'rb'))
+# Load the retrained XGBoost model
+model = pickle.load(open('xgb_model_retrained.pkl', 'rb'))
 
-# Create Flask app
+# Flask app initialization
 app = Flask(__name__)
 
-# Define a function to preprocess the input data
+# Function to preprocess input data
 def preprocess_input(data):
-    # Here you would need to encode categorical features (e.g., "Contract", "InternetService") to numeric values
-    # We will use one-hot encoding as an example, you should modify this based on how your model was trained
-    
-    contract_mapping = {"Month-to-month": 0, "One year": 1, "Two year": 2}
-    internet_service_mapping = {"DSL": 0, "Fiber optic": 1, "No": 2}
-    online_security_mapping = {"Yes": 1, "No": 0, "No internet service": 2}
-    tech_support_mapping = {"Yes": 1, "No": 0, "No internet service": 2}
+    # Define categorical mappings (for simplicity, match the one-hot encoded order)
+    contract_mapping = {"Month-to-month": [1, 0], "One year": [0, 1], "Two year": [0, 0]}
+    internet_service_mapping = {"DSL": [1, 0], "Fiber optic": [0, 1], "No": [0, 0]}
+    online_security_mapping = {"Yes": [1], "No": [0], "No internet service": [0]}
+    tech_support_mapping = {"Yes": [1], "No": [0], "No internet service": [0]}
     payment_method_mapping = {
-        "Electronic check": 0,
-        "Mailed check": 1,
-        "Bank transfer (automatic)": 2,
-        "Credit card (automatic)": 3,
+        "Electronic check": [0, 0, 0],
+        "Mailed check": [1, 0, 0],
+        "Bank transfer (automatic)": [0, 1, 0],
+        "Credit card (automatic)": [0, 0, 1],
     }
 
-    # Map categorical data to numerical values
-    contract = contract_mapping.get(data['contract'], -1)
-    internet_service = internet_service_mapping.get(data['internet_service'], -1)
-    online_security = online_security_mapping.get(data['online_security'], -1)
-    tech_support = tech_support_mapping.get(data['tech_support'], -1)
-    payment_method = payment_method_mapping.get(data['payment_method'], -1)
+    # Map inputs to encoded values
+    contract = contract_mapping[data['Contract']]
+    internet_service = internet_service_mapping[data['InternetService']]
+    online_security = online_security_mapping[data['OnlineSecurity']]
+    tech_support = tech_support_mapping[data['TechSupport']]
+    payment_method = payment_method_mapping[data['PaymentMethod']]
 
-    # Prepare the input data for prediction
-    input_data = np.array([
-        [
-            contract,   # Contract
-            data['tenure'],  # Tenure (numerical)
-            internet_service,   # InternetService
-            data['total_charges'],   # TotalCharges (numerical)
-            data['monthly_charges'],   # MonthlyCharges (numerical)
-            online_security,   # OnlineSecurity
-            tech_support,   # TechSupport
-            payment_method,   # PaymentMethod
-        ]
+    # Combine all features in the correct order
+    processed_data = np.array([
+        data['tenure'], data['TotalCharges'], data['MonthlyCharges'],
+        *contract, *internet_service, *online_security, *tech_support, *payment_method
     ])
-    return input_data
 
-# Route for the home page (form submission)
+    return processed_data.reshape(1, -1)
+
 @app.route('/')
 def home():
     return render_template('index.html', prediction=None)
 
-# Route for the prediction (POST request)
 @app.route('/predict', methods=['POST'])
 def predict():
     # Get form data
     data = {
-        'contract': request.form['contract'],
+        'Contract': request.form['Contract'],
         'tenure': float(request.form['tenure']),
-        'internet_service': request.form['internet_service'],
-        'total_charges': float(request.form['total_charges']),
-        'monthly_charges': float(request.form['monthly_charges']),
-        'online_security': request.form['online_security'],
-        'tech_support': request.form['tech_support'],
-        'payment_method': request.form['payment_method']
+        'InternetService': request.form['InternetService'],
+        'TotalCharges': float(request.form['TotalCharges']),
+        'MonthlyCharges': float(request.form['MonthlyCharges']),
+        'OnlineSecurity': request.form['OnlineSecurity'],
+        'TechSupport': request.form['TechSupport'],
+        'PaymentMethod': request.form['PaymentMethod']
     }
 
     # Preprocess the input data
     input_data = preprocess_input(data)
 
-    # Predict the churn using the model
+    # Make a prediction
     prediction = model.predict(input_data)[0]
 
-    # Interpret the prediction (0 = No churn, 1 = Churn)
-    prediction_result = 'Churn' if prediction == 1 else 'No Churn'
-
+    # Interpret the prediction
+    prediction_result = "Churn" if prediction == 1 else "No Churn"
     return render_template('index.html', prediction=prediction_result)
 
-# Run the app
 if __name__ == '__main__':
     app.run(debug=True)
